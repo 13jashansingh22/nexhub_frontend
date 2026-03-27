@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/hub/presentation/game_hub_screen.dart';
 import 'theme/app_theme.dart';
+
+import '../features/portfolio_screen.dart';
+import '../features/games/game_router.dart';
 
 final GoRouter _router = GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const GameHubScreen()),
+    GoRoute(path: '/', builder: (context, state) => const PortfolioScreen()),
+    GoRoute(
+      path: '/game',
+      builder: (context, state) {
+        final title =
+            state.extra as String? ??
+            state.uri.queryParameters['title'] ??
+            'Unknown';
+        return getGameScreenByTitle(title);
+      },
+    ),
   ],
 );
 

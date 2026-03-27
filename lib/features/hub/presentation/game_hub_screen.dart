@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_palette.dart';
 import '../domain/game_catalog.dart';
+import '../../games/game_router.dart';
 
 class GameHubScreen extends StatelessWidget {
   const GameHubScreen({super.key});
@@ -319,7 +320,12 @@ class _GameCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: () {
+            final screen = getGameScreenByTitle(game.title);
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => screen));
+          },
           borderRadius: AppRadius.md,
           child: Ink(
             decoration: BoxDecoration(

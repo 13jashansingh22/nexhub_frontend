@@ -34,16 +34,16 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: Colors.white.withValues(alpha: 0.06),
+        color: Colors.white.withOpacity(0.06),
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.md,
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.white.withOpacity(0.12)),
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
-        backgroundColor: Colors.white.withValues(alpha: 0.08),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.sm),
+        backgroundColor: Colors.white.withOpacity(0.08),
+        side: BorderSide(color: Colors.white.withOpacity(0.16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         labelStyle: const TextStyle(
           color: AppPalette.textPrimary,
           fontWeight: FontWeight.w600,
@@ -55,7 +55,7 @@ class AppTheme {
             EdgeInsets.symmetric(horizontal: 22, vertical: 14),
           ),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: AppRadius.sm),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           backgroundColor: const WidgetStatePropertyAll(AppPalette.purple),
           foregroundColor: const WidgetStatePropertyAll(Colors.white),
@@ -63,22 +63,22 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
+        fillColor: Colors.white.withOpacity(0.06),
         hintStyle: const TextStyle(color: AppPalette.textMuted),
         border: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.14)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.sm,
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.14)),
         ),
         focusedBorder: const OutlineInputBorder(
-          borderRadius: AppRadius.sm,
+          borderRadius: BorderRadius.all(Radius.circular(8)),
           borderSide: BorderSide(color: AppPalette.cyan, width: 1.3),
         ),
       ),
-      dividerColor: Colors.white.withValues(alpha: 0.08),
+      dividerColor: Colors.white.withOpacity(0.08),
     );
   }
 
@@ -98,15 +98,15 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       chipTheme: base.chipTheme.copyWith(
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.sm),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: ButtonStyle(
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: AppRadius.sm),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
       ),
