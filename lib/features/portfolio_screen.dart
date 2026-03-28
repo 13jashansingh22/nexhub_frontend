@@ -1,9 +1,84 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'dart:math';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
+
+const _portfolioFont = 'Poppins';
+const _primaryColor = Color(0xFF1976D2); // Blue
+const _accentColor = Color(0xFFE040FB); // Pink
+const _bgGradient1 = Color(0xFF232526);
+const _bgGradient2 = Color(0xFF1976D2);
+const _bgGradient3 = Color(0xFFE040FB);
+
+// Short horizontal game portfolio widget
+class ShortGamePortfolio extends StatelessWidget {
+  final List<Map<String, String>> games;
+  final void Function(String title)? onGameTap;
+  const ShortGamePortfolio({super.key, required this.games, this.onGameTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 110,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: games.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final game = games[index];
+          return GestureDetector(
+            onTap: () => onGameTap?.call(game['title'] ?? ''),
+            child: Container(
+              width: 90,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _primaryColor.withOpacity(0.18)),
+                boxShadow: [
+                  BoxShadow(
+                    color: _accentColor.withOpacity(0.18),
+                    blurRadius: 12,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 48,
+                    child: Image.asset(
+                      game['image'] ?? '',
+                      fit: BoxFit.contain,
+                      errorBuilder:
+                          (context, error, stackTrace) => Icon(
+                            Icons.videogame_asset,
+                            size: 36,
+                            color: _accentColor,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    game['title'] ?? '',
+                    style: const TextStyle(
+                      fontFamily: _portfolioFont,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: _primaryColor,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
 
 class PortfolioScreen extends StatefulWidget {
   const PortfolioScreen({super.key});
@@ -150,17 +225,14 @@ class _PortfolioScreenState extends State<PortfolioScreen>
         title: ShaderMask(
           shaderCallback:
               (bounds) => const LinearGradient(
-                colors: [
-                  Color(0xFF8A63FF),
-                  Color(0xFF4B2067),
-                  Color(0xFF1B1734),
-                ],
+                colors: [_primaryColor, _accentColor, _bgGradient1],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ).createShader(bounds),
           child: const Text(
             'NexHub Games',
             style: TextStyle(
+              fontFamily: _portfolioFont,
               fontWeight: FontWeight.bold,
               fontSize: 34,
               letterSpacing: 2.5,
@@ -168,7 +240,7 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               shadows: [
                 Shadow(
                   blurRadius: 24,
-                  color: Color(0xFF8A63FF),
+                  color: _primaryColor,
                   offset: Offset(0, 2),
                 ),
               ],
@@ -190,13 +262,13 @@ class _PortfolioScreenState extends State<PortfolioScreen>
                   gradient: LinearGradient(
                     colors: [
                       Color.lerp(
-                        const Color(0xFF090814),
-                        const Color(0xFF8A63FF),
+                        _bgGradient1,
+                        _primaryColor,
                         0.5 + 0.5 * sin(_bgController.value * 2 * pi),
                       )!,
                       Color.lerp(
-                        const Color(0xFF1B1734),
-                        const Color(0xFF00E5FF),
+                        _bgGradient2,
+                        _accentColor,
                         0.5 + 0.5 * cos(_bgController.value * 2 * pi),
                       )!,
                     ],
@@ -214,243 +286,20 @@ class _PortfolioScreenState extends State<PortfolioScreen>
               size: Size.infinite,
             ),
           ),
-          // Glassmorphic grid and content
+          // Short horizontal portfolio at the top
           Column(
             children: [
               const SizedBox(height: 80),
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(32),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.85,
-                    crossAxisSpacing: 32,
-                    mainAxisSpacing: 32,
-                  ),
-                  itemCount: games.length,
-                  itemBuilder: (context, index) {
-                    final game = games[index];
-                    final isHovered = _hoveredIndex == index;
-                    return MouseRegion(
-                      onEnter: (_) => setState(() => _hoveredIndex = index),
-                      onExit:
-                          (_) => setState(() {
-                            _hoveredIndex = -1;
-                            _tiltX = 0;
-                            _tiltY = 0;
-                          }),
-                      child: Listener(
-                        onPointerHover: (event) {
-                          if (_hoveredIndex == index) {
-                            final box =
-                                context.findRenderObject() as RenderBox?;
-                            if (box != null) {
-                              final local = box.globalToLocal(event.position);
-                              final size = box.size;
-                              final dx = (local.dx / size.width - 0.5) * 2;
-                              final dy = (local.dy / size.height - 0.5) * 2;
-                              setState(() {
-                                _tiltX = dy * 0.18;
-                                _tiltY = -dx * 0.18;
-                              });
-                            }
-                          }
-                        },
-                        child: GestureDetector(
-                          onTap: () {
-                            GoRouter.of(
-                              context,
-                            ).push('/game', extra: game['title']);
-                          },
-                          child: AnimatedScale(
-                            scale: isHovered ? 1.10 : 1.0,
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeInOut,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 350),
-                              curve: Curves.easeInOut,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(32),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        isHovered
-                                            ? Colors.cyanAccent.withOpacity(
-                                              0.55,
-                                            )
-                                            : Colors.deepPurpleAccent
-                                                .withOpacity(0.18),
-                                    blurRadius: isHovered ? 60 : 18,
-                                    spreadRadius: isHovered ? 16 : 2,
-                                  ),
-                                  BoxShadow(
-                                    color:
-                                        isHovered
-                                            ? Colors.blueAccent.withOpacity(
-                                              0.22,
-                                            )
-                                            : Colors.black.withOpacity(0.08),
-                                    blurRadius: isHovered ? 80 : 12,
-                                    spreadRadius: isHovered ? 18 : 2,
-                                  ),
-                                ],
-                                gradient:
-                                    isHovered
-                                        ? LinearGradient(
-                                          colors: [
-                                            Color(0xFF00E5FF),
-                                            Color(0xFF8A63FF),
-                                            Color(0xFF1B1734),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        )
-                                        : LinearGradient(
-                                          colors: [
-                                            Color(0xFF090814),
-                                            Color(0xFF8A63FF),
-                                            Color(0xFF1B1734),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                border: Border.all(
-                                  color:
-                                      isHovered
-                                          ? Colors.cyanAccent.withOpacity(0.8)
-                                          : Colors.white.withOpacity(0.14),
-                                  width: isHovered ? 5.0 : 1.5,
-                                ),
-                                backgroundBlendMode: BlendMode.overlay,
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(32),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(
-                                    sigmaX: 18,
-                                    sigmaY: 18,
-                                  ),
-                                  child: Transform(
-                                    alignment: Alignment.center,
-                                    transform:
-                                        isHovered
-                                            ? (Matrix4.identity()
-                                              ..setEntry(3, 2, 0.001)
-                                              ..rotateX(_tiltX)
-                                              ..rotateY(_tiltY))
-                                            : Matrix4.identity(),
-                                    child: Card(
-                                      elevation: isHovered ? 60 : 16,
-                                      color: Colors.white.withOpacity(
-                                        isHovered ? 0.18 : 0.10,
-                                      ),
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(32),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 18.0,
-                                              bottom: 8.0,
-                                            ),
-                                            child: SizedBox(
-                                              height: 72,
-                                              child: AnimatedContainer(
-                                                duration: const Duration(
-                                                  milliseconds: 400,
-                                                ),
-                                                curve: Curves.easeInOut,
-                                                decoration: BoxDecoration(
-                                                  boxShadow: [
-                                                    if (isHovered)
-                                                      BoxShadow(
-                                                        color: Colors.cyanAccent
-                                                            .withOpacity(0.38),
-                                                        blurRadius: 48,
-                                                        spreadRadius: 12,
-                                                      ),
-                                                  ],
-                                                ),
-                                                child: Image.asset(
-                                                  game['image']!,
-                                                  fit: BoxFit.contain,
-                                                  errorBuilder: (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) {
-                                                    return Icon(
-                                                      Icons.videogame_asset,
-                                                      size: 56,
-                                                      color: const Color(
-                                                        0xFF8A63FF,
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Text(
-                                            game['title']!,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: isHovered ? 28 : 22,
-                                              color:
-                                                  isHovered
-                                                      ? Color(0xFF00E5FF)
-                                                      : Color(0xFF8A63FF),
-                                              letterSpacing: 1.7,
-                                              shadows:
-                                                  isHovered
-                                                      ? [
-                                                        Shadow(
-                                                          color: Colors
-                                                              .cyanAccent
-                                                              .withOpacity(
-                                                                0.38,
-                                                              ),
-                                                          blurRadius: 24,
-                                                        ),
-                                                      ]
-                                                      : [],
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 6.0,
-                                              horizontal: 12.0,
-                                            ),
-                                            child: Text(
-                                              game['description']!,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                fontSize: 15,
-                                                color:
-                                                    isHovered
-                                                        ? Colors.white
-                                                        : Colors.white70,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              ShortGamePortfolio(
+                games: games.take(6).toList(),
+                onGameTap: (title) {
+                  GoRouter.of(context).push('/game', extra: title);
+                },
               ),
+              // Expanded grid (optional, can be removed for only short portfolio)
+              // Expanded(
+              //   child: Container(),
+              // ),
             ],
           ),
         ],
