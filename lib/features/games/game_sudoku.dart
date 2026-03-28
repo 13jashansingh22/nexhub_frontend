@@ -8,6 +8,9 @@ class SudokuGameScreen extends StatefulWidget {
 }
 
 class _SudokuGameScreenState extends State<SudokuGameScreen> {
+  int? selectedRow;
+  int? selectedCol;
+  bool showMistakes = false;
   static const int gridSize = 9;
   late List<List<int>> puzzle;
   late List<List<int>> solution;
@@ -54,8 +57,46 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
     if (!fixed[r][c]) {
       setState(() {
         puzzle[r][c] = val;
+        selectedRow = r;
+        selectedCol = c;
       });
     }
+  }
+
+  void _selectCell(int r, int c) {
+    if (!fixed[r][c]) {
+      setState(() {
+        selectedRow = r;
+        selectedCol = c;
+      });
+    }
+  }
+
+  void _clearCell() {
+    if (selectedRow != null &&
+        selectedCol != null &&
+        !fixed[selectedRow!][selectedCol!]) {
+      setState(() {
+        puzzle[selectedRow!][selectedCol!] = 0;
+      });
+    }
+  }
+
+  void _checkMistakes() {
+    setState(() {
+      showMistakes = true;
+    });
+  }
+
+  void _solvePuzzle() {
+    setState(() {
+      for (int r = 0; r < gridSize; r++) {
+        for (int c = 0; c < gridSize; c++) {
+          puzzle[r][c] = solution[r][c];
+        }
+      }
+      showMistakes = false;
+    });
   }
 
   bool _isSolved() {
@@ -82,14 +123,20 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           AspectRatio(
             aspectRatio: 1,
             child: Container(
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 8,
+                  ),
+                ],
               ),
               child: GridView.builder(
                 physics: const NeverScrollableScrollPhysics(),
@@ -101,44 +148,65 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                   final r = i ~/ gridSize;
                   final c = i % gridSize;
                   final val = puzzle[r][c];
+                  final isSelected = selectedRow == r && selectedCol == c;
+                  final isMistake =
+                      showMistakes && val != 0 && val != solution[r][c];
                   return GestureDetector(
-                    onTap:
-                        fixed[r][c]
-                            ? null
-                            : () async {
-                              final n = await showDialog<int>(
-                                context: context,
-                                builder: (context) => NumberPickerDialog(),
-                              );
-                              if (n != null) _setCell(r, c, n);
-                            },
-                    child: Container(
+                    onTap: () => _selectCell(r, c),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
                       margin: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         color:
-                            fixed[r][c] ? Colors.grey[700] : Colors.grey[800],
+                            isSelected
+                                ? Colors.blue[400]
+                                : (fixed[r][c]
+                                    ? Colors.grey[700]
+                                    : Colors.grey[800]),
                         border: Border.all(
                           color:
-                              (r % 3 == 2 && r != 8) || (c % 3 == 2 && c != 8)
-                                  ? Colors.white
-                                  : Colors.grey[600]!,
+                              isMistake
+                                  ? Colors.red
+                                  : ((r % 3 == 2 && r != 8) ||
+                                          (c % 3 == 2 && c != 8)
+                                      ? Colors.white
+                                      : Colors.grey[600]!),
                           width:
-                              (r % 3 == 2 && r != 8) || (c % 3 == 2 && c != 8)
-                                  ? 2
-                                  : 1,
+                              isMistake
+                                  ? 3
+                                  : ((r % 3 == 2 && r != 8) ||
+                                          (c % 3 == 2 && c != 8)
+                                      ? 2
+                                      : 1),
                         ),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(
+                          isSelected ? 10 : 4,
+                        ),
+                        boxShadow:
+                            isSelected
+                                ? [
+                                  BoxShadow(
+                                    color: Colors.blue.withOpacity(0.25),
+                                    blurRadius: 8,
+                                  ),
+                                ]
+                                : null,
                       ),
                       child: Center(
                         child: Text(
                           val == 0 ? '' : '$val',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight:
                                 fixed[r][c]
                                     ? FontWeight.bold
                                     : FontWeight.normal,
-                            color: fixed[r][c] ? Colors.white : Colors.orange,
+                            color:
+                                isMistake
+                                    ? Colors.redAccent
+                                    : (fixed[r][c]
+                                        ? Colors.white
+                                        : Colors.orange),
                           ),
                         ),
                       ),
@@ -146,6 +214,82 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
                   );
                 },
               ),
+            ),
+          ),
+          // Number pad
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (int n = 1; n <= 9; n++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(36, 36),
+                        backgroundColor: Colors.grey[850],
+                        foregroundColor: Colors.orange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed:
+                          selectedRow != null &&
+                                  selectedCol != null &&
+                                  !fixed[selectedRow!][selectedCol!]
+                              ? () => _setCell(selectedRow!, selectedCol!, n)
+                              : null,
+                      child: Text('$n', style: const TextStyle(fontSize: 18)),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(36, 36),
+                      backgroundColor: Colors.grey[850],
+                      foregroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed:
+                        selectedRow != null &&
+                                selectedCol != null &&
+                                !fixed[selectedRow!][selectedCol!]
+                            ? _clearCell
+                            : null,
+                    child: const Icon(Icons.backspace_outlined, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Action buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.check),
+                  label: const Text('Check'),
+                  onPressed: _checkMistakes,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.lightbulb),
+                  label: const Text('Solve'),
+                  onPressed: _solvePuzzle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                  ),
+                ),
+              ],
             ),
           ),
           if (_isSolved())
