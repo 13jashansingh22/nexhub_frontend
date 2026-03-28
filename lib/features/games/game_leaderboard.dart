@@ -8,7 +8,7 @@ class GameLeaderboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       itemCount: scores.length,
-      separatorBuilder: (_, __) => const Divider(),
+      separatorBuilder: (_, _) => const Divider(),
       itemBuilder: (context, index) {
         final entry = scores[index];
         return ListTile(

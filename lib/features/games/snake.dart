@@ -52,12 +52,9 @@ class _SnakeGameScreenState extends State<SnakeGameScreen> {
 
   // Generate a new food position not occupied by the snake
   Offset _randomFood() {
-    final random =
-        (int max) =>
-            (max *
-                    (new DateTime.now().microsecondsSinceEpoch % 1000000) /
-                    1000000)
-                .floor();
+    int random(int max) =>
+        (max * (DateTime.now().microsecondsSinceEpoch % 1000000) / 1000000)
+            .floor();
     Offset pos;
     do {
       pos = Offset(random(colCount).toDouble(), random(rowCount).toDouble());
@@ -173,8 +170,9 @@ class _SnakeGameScreenState extends State<SnakeGameScreen> {
                   child: Focus(
                     autofocus: true,
                     onKey: (node, event) {
-                      if (event is! RawKeyDownEvent)
+                      if (event is! RawKeyDownEvent) {
                         return KeyEventResult.ignored;
+                      }
                       final key = event.logicalKey.keyLabel.toLowerCase();
                       if ((event.logicalKey.keyId == 0x100070052 &&
                               _direction != Direction.down) ||
@@ -227,7 +225,7 @@ class _SnakeGameScreenState extends State<SnakeGameScreen> {
                     child: AnimatedBuilder(
                       animation: _score,
                       builder:
-                          (_, __) => Container(
+                          (_, _) => Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 10,
@@ -305,14 +303,43 @@ class _SnakePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cellWidth = size.width / _SnakeGameScreenState.colCount;
     final cellHeight = size.height / _SnakeGameScreenState.rowCount;
-    final snakePaint = Paint()..color = Colors.green.shade700;
-    final snakeShadow =
+    final snakePaint =
         Paint()
-          ..color = Colors.black.withOpacity(0.15)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    final foodPaint = Paint()..color = Colors.redAccent;
+          ..color = Colors.green.shade700
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    final snakeGlow =
+        Paint()
+          ..color = Colors.greenAccent.withOpacity(0.7)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+    final foodPaint =
+        Paint()
+          ..color = Colors.redAccent
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    final foodGlow =
+        Paint()
+          ..color = Colors.yellowAccent.withOpacity(0.7)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 24);
     final foodLeafPaint = Paint()..color = Colors.green.shade800;
-    // Draw snake with rounded segments and shadow
+
+    // Animated background gradient
+    final bgGradient =
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              Colors.green.shade100,
+              Colors.green.shade400,
+              Colors.green.shade900,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: [0.0, 0.5, 1.0],
+            transform: GradientRotation(
+              DateTime.now().millisecondsSinceEpoch % 3600 / 3600 * 6.28,
+            ),
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgGradient);
+
+    // Draw snake with glow
     for (final pos in snake) {
       final rect = Rect.fromLTWH(
         pos.dx * cellWidth,
@@ -322,19 +349,18 @@ class _SnakePainter extends CustomPainter {
       );
       final rrect = RRect.fromRectAndRadius(
         rect,
-        Radius.circular(cellWidth * 0.4),
+        Radius.circular(cellWidth * 0.45),
       );
-      // Shadow
-      canvas.drawRRect(rrect.shift(const Offset(2, 2)), snakeShadow);
-      // Body
+      canvas.drawRRect(rrect, snakeGlow);
       canvas.drawRRect(rrect, snakePaint);
     }
-    // Draw food as an apple (circle with a leaf)
+    // Draw food with glow
     final foodCenter = Offset(
       food.dx * cellWidth + cellWidth / 2,
       food.dy * cellHeight + cellHeight / 2,
     );
     final foodRadius = cellWidth * 0.38;
+    canvas.drawCircle(foodCenter, foodRadius * 1.2, foodGlow);
     canvas.drawCircle(foodCenter, foodRadius, foodPaint);
     // Apple leaf
     final leafPath = Path();

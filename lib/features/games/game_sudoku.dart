@@ -304,6 +304,8 @@ class _SudokuGameScreenState extends State<SudokuGameScreen> {
 }
 
 class NumberPickerDialog extends StatelessWidget {
+  const NumberPickerDialog({super.key});
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

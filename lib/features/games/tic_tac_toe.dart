@@ -49,34 +49,58 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
   void _checkGameState() {
     // Check rows, columns, diagonals
     for (int i = 0; i < gridSize; i++) {
-      if (board[i][0] != '' && board[i][0] == board[i][1] && board[i][1] == board[i][2]) {
+      if (board[i][0] != '' &&
+          board[i][0] == board[i][1] &&
+          board[i][1] == board[i][2]) {
         winner = board[i][0];
-        winLine = [[i, 0], [i, 1], [i, 2]];
+        winLine = [
+          [i, 0],
+          [i, 1],
+          [i, 2],
+        ];
         _score.increment();
         GameSound.play('point.wav');
         _leaderboard[2]['score'] = _score.score;
         return;
       }
-      if (board[0][i] != '' && board[0][i] == board[1][i] && board[1][i] == board[2][i]) {
+      if (board[0][i] != '' &&
+          board[0][i] == board[1][i] &&
+          board[1][i] == board[2][i]) {
         winner = board[0][i];
-        winLine = [[0, i], [1, i], [2, i]];
+        winLine = [
+          [0, i],
+          [1, i],
+          [2, i],
+        ];
         _score.increment();
         GameSound.play('point.wav');
         _leaderboard[2]['score'] = _score.score;
         return;
       }
     }
-    if (board[0][0] != '' && board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
+    if (board[0][0] != '' &&
+        board[0][0] == board[1][1] &&
+        board[1][1] == board[2][2]) {
       winner = board[0][0];
-      winLine = [[0, 0], [1, 1], [2, 2]];
+      winLine = [
+        [0, 0],
+        [1, 1],
+        [2, 2],
+      ];
       _score.increment();
       GameSound.play('point.wav');
       _leaderboard[2]['score'] = _score.score;
       return;
     }
-    if (board[0][2] != '' && board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
+    if (board[0][2] != '' &&
+        board[0][2] == board[1][1] &&
+        board[1][1] == board[2][0]) {
       winner = board[0][2];
-      winLine = [[0, 2], [1, 1], [2, 0]];
+      winLine = [
+        [0, 2],
+        [1, 1],
+        [2, 0],
+      ];
       _score.increment();
       GameSound.play('point.wav');
       _leaderboard[2]['score'] = _score.score;
@@ -111,13 +135,14 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
                 const Text('Score:', style: TextStyle(fontSize: 18)),
                 AnimatedBuilder(
                   animation: _score,
-                  builder: (_, __) => Text(
-                    '${_score.score}',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  builder:
+                      (_, _) => Text(
+                        '${_score.score}',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                 ),
               ],
             ),
@@ -145,35 +170,37 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
                 itemBuilder: (context, i) {
                   final r = i ~/ gridSize;
                   final c = i % gridSize;
-                  final isWinCell = winLine?.any((pos) => pos[0] == r && pos[1] == c) ?? false;
+                  final isWinCell =
+                      winLine?.any((pos) => pos[0] == r && pos[1] == c) ??
+                      false;
                   return GestureDetector(
                     onTap: () => _handleTap(r, c),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 120),
                       margin: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: isWinCell
-                            ? Colors.green[400]
-                            : (board[r][c] == ''
-                                ? Colors.grey[800]
-                                : (board[r][c] == 'X'
-                                    ? Colors.blue[300]
-                                    : Colors.orange[300])),
+                        color:
+                            isWinCell
+                                ? Colors.green[400]
+                                : (board[r][c] == ''
+                                    ? Colors.grey[800]
+                                    : (board[r][c] == 'X'
+                                        ? Colors.blue[300]
+                                        : Colors.orange[300])),
                         border: Border.all(
-                          color: isWinCell
-                              ? Colors.greenAccent
-                              : Colors.white,
+                          color: isWinCell ? Colors.greenAccent : Colors.white,
                           width: isWinCell ? 3 : 1.5,
                         ),
                         borderRadius: BorderRadius.circular(isWinCell ? 12 : 6),
-                        boxShadow: isWinCell
-                            ? [
-                                BoxShadow(
-                                  color: Colors.green.withOpacity(0.18),
-                                  blurRadius: 8,
-                                ),
-                              ]
-                            : null,
+                        boxShadow:
+                            isWinCell
+                                ? [
+                                  BoxShadow(
+                                    color: Colors.green.withOpacity(0.18),
+                                    blurRadius: 8,
+                                  ),
+                                ]
+                                : null,
                       ),
                       child: Center(
                         child: Text(
@@ -181,11 +208,12 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
                           style: TextStyle(
                             fontSize: 48,
                             fontWeight: FontWeight.bold,
-                            color: isWinCell
-                                ? Colors.white
-                                : (board[r][c] == 'X'
-                                    ? Colors.blue[900]
-                                    : Colors.deepOrange[900]),
+                            color:
+                                isWinCell
+                                    ? Colors.white
+                                    : (board[r][c] == 'X'
+                                        ? Colors.blue[900]
+                                        : Colors.deepOrange[900]),
                           ),
                         ),
                       ),
@@ -200,15 +228,14 @@ class _TicTacToeGameScreenState extends State<TicTacToeGameScreen> {
             child: Text(
               winner != null
                   ? 'Winner: $winner!'
-                  : (draw
-                      ? 'Draw!'
-                      : 'Current: $currentPlayer'),
+                  : (draw ? 'Draw!' : 'Current: $currentPlayer'),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
-                color: winner != null
-                    ? Colors.green
-                    : (draw ? Colors.orange : Colors.blueGrey),
+                color:
+                    winner != null
+                        ? Colors.green
+                        : (draw ? Colors.orange : Colors.blueGrey),
               ),
             ),
           ),

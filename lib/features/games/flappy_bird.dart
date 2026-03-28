@@ -248,7 +248,7 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                     child: AnimatedBuilder(
                       animation: _score,
                       builder:
-                          (_, __) => Container(
+                          (_, _) => Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 10,

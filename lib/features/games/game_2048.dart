@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter/services.dart';
 
 class Game2048Screen extends StatefulWidget {
   const Game2048Screen({super.key});
@@ -177,13 +178,17 @@ class _Game2048ScreenState extends State<Game2048Screen> {
         autofocus: true,
         onKey: (event) {
           if (event is RawKeyDownEvent) {
-            if (event.logicalKey.keyLabel == 'Arrow Up' || event.logicalKey.keyLabel.toLowerCase() == 'w') {
+            if (event.logicalKey.keyLabel == 'Arrow Up' ||
+                event.logicalKey.keyLabel.toLowerCase() == 'w') {
               _handleMove(_moveUp);
-            } else if (event.logicalKey.keyLabel == 'Arrow Down' || event.logicalKey.keyLabel.toLowerCase() == 's') {
+            } else if (event.logicalKey.keyLabel == 'Arrow Down' ||
+                event.logicalKey.keyLabel.toLowerCase() == 's') {
               _handleMove(_moveDown);
-            } else if (event.logicalKey.keyLabel == 'Arrow Left' || event.logicalKey.keyLabel.toLowerCase() == 'a') {
+            } else if (event.logicalKey.keyLabel == 'Arrow Left' ||
+                event.logicalKey.keyLabel.toLowerCase() == 'a') {
               _handleMove(_moveLeft);
-            } else if (event.logicalKey.keyLabel == 'Arrow Right' || event.logicalKey.keyLabel.toLowerCase() == 'd') {
+            } else if (event.logicalKey.keyLabel == 'Arrow Right' ||
+                event.logicalKey.keyLabel.toLowerCase() == 'd') {
               _handleMove(_moveRight);
             }
           }
@@ -207,25 +212,48 @@ class _Game2048ScreenState extends State<Game2048Screen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12.0,
+                  horizontal: 24,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange[700],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text('Score: $score', style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Score: $score',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey[800],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text('Best: $bestScore', style: const TextStyle(fontSize: 20, color: Colors.white70, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Best: $bestScore',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.refresh),
@@ -234,7 +262,9 @@ class _Game2048ScreenState extends State<Game2048Screen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[700],
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ],
@@ -256,9 +286,10 @@ class _Game2048ScreenState extends State<Game2048Screen> {
                   ),
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: gridSize,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: gridSize,
+                        ),
                     itemCount: gridSize * gridSize,
                     itemBuilder: (context, i) {
                       final r = i ~/ gridSize;
@@ -300,7 +331,8 @@ class _Game2048ScreenState extends State<Game2048Screen> {
                           tileColor = const Color(0xFFEDC22E);
                           break;
                         default:
-                          tileColor = val == 0 ? Colors.grey[800]! : Colors.black87;
+                          tileColor =
+                              val == 0 ? Colors.grey[800]! : Colors.black87;
                       }
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 120),
@@ -308,26 +340,31 @@ class _Game2048ScreenState extends State<Game2048Screen> {
                         decoration: BoxDecoration(
                           color: tileColor,
                           borderRadius: BorderRadius.circular(10),
-                          boxShadow: val > 0
-                              ? [
-                                  BoxShadow(
-                                    color: Colors.orange.withOpacity(0.12),
-                                    blurRadius: 8,
-                                  ),
-                                ]
-                              : null,
+                          boxShadow:
+                              val > 0
+                                  ? [
+                                    BoxShadow(
+                                      color: Colors.orange.withOpacity(0.12),
+                                      blurRadius: 8,
+                                    ),
+                                  ]
+                                  : null,
                         ),
                         child: Center(
-                          child: val == 0
-                              ? const SizedBox.shrink()
-                              : Text(
-                                  '$val',
-                                  style: TextStyle(
-                                    fontSize: val < 128 ? 28 : 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: val <= 4 ? Colors.grey[800] : Colors.white,
+                          child:
+                              val == 0
+                                  ? const SizedBox.shrink()
+                                  : Text(
+                                    '$val',
+                                    style: TextStyle(
+                                      fontSize: val < 128 ? 28 : 24,
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          val <= 4
+                                              ? Colors.grey[800]
+                                              : Colors.white,
+                                    ),
                                   ),
-                                ),
                         ),
                       );
                     },
