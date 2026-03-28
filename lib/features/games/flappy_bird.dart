@@ -63,8 +63,16 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
   void _tick() {
     if (_isGameOver) return;
     setState(() {
-      _velocity += gravity * 0.018;
+      // Fixed timestep for stability
+      const double dt = 0.018;
+      // Apply gravity
+      _velocity += gravity * dt;
+      // Clamp velocity for stability
+      _velocity = _velocity.clamp(-1.0, 1.0);
+      // Update position
       _birdY += _velocity;
+      // Clamp bird position to screen
+      _birdY = _birdY.clamp(0.0, 1.0);
       for (final pipe in _pipes) {
         pipe.x -= 0.012;
       }
@@ -79,7 +87,7 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
         _leaderboard[2]['score'] = _score.score;
       }
       // Collision with ground/ceiling
-      if (_birdY < 0 || _birdY > 1) {
+      if (_birdY <= 0 || _birdY >= 1) {
         _gameOver();
         return;
       }
@@ -188,16 +196,21 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                   onKey: (node, event) {
                     if (event is RawKeyDownEvent) {
                       final key = event.logicalKey.keyLabel.toLowerCase();
-                      if (key == ' ' || key == 'w' || event.logicalKey.keyId == 0x100070052) {
+                      if (key == ' ' ||
+                          key == 'w' ||
+                          event.logicalKey.keyId == 0x100070052) {
                         _moveUp();
                         return KeyEventResult.handled;
-                      } else if (key == 's' || event.logicalKey.keyId == 0x100070051) {
+                      } else if (key == 's' ||
+                          event.logicalKey.keyId == 0x100070051) {
                         _moveDown();
                         return KeyEventResult.handled;
-                      } else if (key == 'a' || event.logicalKey.keyId == 0x100070050) {
+                      } else if (key == 'a' ||
+                          event.logicalKey.keyId == 0x100070050) {
                         _moveLeft();
                         return KeyEventResult.handled;
-                      } else if (key == 'd' || event.logicalKey.keyId == 0x10007004f) {
+                      } else if (key == 'd' ||
+                          event.logicalKey.keyId == 0x10007004f) {
                         _moveRight();
                         return KeyEventResult.handled;
                       }
@@ -215,7 +228,12 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                         ),
                       ),
                       child: CustomPaint(
-                        painter: _FlappyPainter(_birdY, _pipes, _isGameOver, birdX: _birdX),
+                        painter: _FlappyPainter(
+                          _birdY,
+                          _pipes,
+                          _isGameOver,
+                          birdX: _birdX,
+                        ),
                         child: Container(),
                       ),
                     ),
@@ -357,7 +375,7 @@ class _FlappyPainter extends CustomPainter {
   final List<_Pipe> pipes;
   final bool isGameOver;
   final double birdX;
-  _FlappyPainter(this.birdY, this.pipes, this.isGameOver, {this.birdX = _FlappyBirdGameScreenState.birdX});
+  _FlappyPainter(this.birdY, this.pipes, this.isGameOver, {this.birdX = 0.2});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -417,11 +435,12 @@ class _FlappyPainter extends CustomPainter {
       birdPaint,
     );
     // Beak
-    final beakPath = Path()
-      ..moveTo(bx + birdSize / 2, by)
-      ..lineTo(bx + birdSize * 0.8, by - birdSize * 0.1)
-      ..lineTo(bx + birdSize * 0.8, by + birdSize * 0.1)
-      ..close();
+    final beakPath =
+        Path()
+          ..moveTo(bx + birdSize / 2, by)
+          ..lineTo(bx + birdSize * 0.8, by - birdSize * 0.1)
+          ..lineTo(bx + birdSize * 0.8, by + birdSize * 0.1)
+          ..close();
     canvas.drawPath(beakPath, beakPaint);
     // Eye
     canvas.drawCircle(
