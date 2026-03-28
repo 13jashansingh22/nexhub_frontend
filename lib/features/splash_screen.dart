@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -8,10 +7,12 @@ class ProjectNameSplashScreen extends StatefulWidget {
   const ProjectNameSplashScreen({super.key, this.onFinish});
 
   @override
-  State<ProjectNameSplashScreen> createState() => _ProjectNameSplashScreenState();
+  State<ProjectNameSplashScreen> createState() =>
+      _ProjectNameSplashScreenState();
 }
 
-class _ProjectNameSplashScreenState extends State<ProjectNameSplashScreen> with SingleTickerProviderStateMixin {
+class _ProjectNameSplashScreenState extends State<ProjectNameSplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnim;
 
@@ -22,10 +23,10 @@ class _ProjectNameSplashScreenState extends State<ProjectNameSplashScreen> with 
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _opacityAnim = Tween<double>(begin: 0.3, end: 1.0).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    _opacityAnim = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     Future.delayed(const Duration(seconds: 2), () {
       widget.onFinish?.call();
     });
