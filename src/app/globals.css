@@ -1,26 +1,106 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-forest: #0f1f1a;
+  --bg-moss: #153328;
+  --bg-amber: #e8d7ad;
+  --bg-card: rgba(20, 41, 33, 0.84);
+  --text-main: #f4f0e1;
+  --text-muted: #bdd6c4;
+  --line-soft: rgba(192, 220, 188, 0.24);
+  --accent-jade: #61d49e;
+  --accent-lime: #b4f06f;
+  --accent-gold: #f4cc74;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(105, 184, 131, 0.3), transparent 40%),
+    radial-gradient(circle at 80% 0%, rgba(253, 216, 113, 0.2), transparent 35%),
+    linear-gradient(135deg, var(--bg-forest) 0%, #0c1814 50%, var(--bg-moss) 100%);
+  color: var(--text-main);
+  font-family: var(--font-display), sans-serif;
+  min-height: 100vh;
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.3) 0.5px, transparent 0.5px);
+  background-size: 3px 3px;
+  z-index: 0;
+}
+
+.fade-up {
+  animation: fadeUp 600ms ease-out both;
+}
+
+.fade-up-delay-1 {
+  animation: fadeUp 850ms ease-out both;
+}
+
+.fade-up-delay-2 {
+  animation: fadeUp 1050ms ease-out both;
+}
+
+.card-shell {
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(140deg, rgba(20, 48, 38, 0.82), var(--bg-card));
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.chip {
+  border: 1px solid rgba(190, 240, 197, 0.35);
+  color: var(--text-muted);
+  background: rgba(11, 25, 21, 0.6);
+}
+
+.cta-primary {
+  background: linear-gradient(120deg, var(--accent-jade), #44a77d);
+  color: #052015;
+}
+
+.cta-secondary {
+  border: 1px solid rgba(244, 204, 116, 0.6);
+  color: #f4dfaf;
+  background: rgba(33, 22, 7, 0.35);
+}
+
+.game-tile {
+  border: 1px solid rgba(180, 240, 111, 0.26);
+  background: linear-gradient(160deg, rgba(20, 40, 32, 0.95), rgba(17, 26, 23, 0.95));
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.game-tile:hover {
+  transform: translateY(-5px);
+  border-color: rgba(180, 240, 111, 0.58);
+  box-shadow: 0 14px 26px rgba(10, 31, 19, 0.5);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    background:
+      radial-gradient(circle at 20% 8%, rgba(105, 184, 131, 0.3), transparent 35%),
+      linear-gradient(155deg, #0b1914 0%, #10251d 100%);
+  }
 }
