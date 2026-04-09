@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
+
+import '../app/theme/app_palette.dart';
 
 class ProjectNameSplashScreen extends StatefulWidget {
   final VoidCallback? onFinish;
@@ -13,55 +16,276 @@ class ProjectNameSplashScreen extends StatefulWidget {
 
 class _ProjectNameSplashScreenState extends State<ProjectNameSplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _opacityAnim;
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnim;
+  Timer? _finishTimer;
+  Timer? _skipTimer;
+  bool _canSkip = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
-    _opacityAnim = Tween<double>(
-      begin: 0.3,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    Future.delayed(const Duration(seconds: 2), () {
-      widget.onFinish?.call();
+    _pulseAnim = CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    );
+    _skipTimer = Timer(const Duration(milliseconds: 1300), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _canSkip = true;
+      });
     });
+    _finishTimer = Timer(const Duration(milliseconds: 2400), _completeSplash);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _finishTimer?.cancel();
+    _skipTimer?.cancel();
+    _pulseController.dispose();
     super.dispose();
+  }
+
+  void _completeSplash() {
+    if (!mounted) {
+      return;
+    }
+    _finishTimer?.cancel();
+    _skipTimer?.cancel();
+    widget.onFinish?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF232526),
-      body: Center(
-        child: FadeTransition(
-          opacity: _opacityAnim,
-          child: Text(
-            'NexHub Games',
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              fontSize: 40,
-              color: Color(0xFFE040FB),
-              letterSpacing: 2.5,
-              shadows: [
-                Shadow(
-                  blurRadius: 24,
-                  color: Color(0xFF1976D2),
-                  offset: Offset(0, 2),
-                ),
-              ],
+      backgroundColor: AppPalette.bgDeep,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(gradient: AppGradients.appBackground),
+          ),
+          Positioned(
+            left: -120,
+            top: -80,
+            child: _GlowOrb(
+              color: AppPalette.purple.withOpacity(0.34),
+              size: 260,
             ),
           ),
+          Positioned(
+            right: -100,
+            bottom: -110,
+            child: _GlowOrb(
+              color: AppPalette.cyan.withOpacity(0.22),
+              size: 240,
+            ),
+          ),
+          Positioned(
+            right: 28,
+            top: 72,
+            child: _GlowOrb(
+              color: AppPalette.pink.withOpacity(0.20),
+              size: 120,
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 460),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 32,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: AppGradients.glass,
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.14),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.28),
+                              blurRadius: 40,
+                              offset: const Offset(0, 22),
+                            ),
+                          ],
+                        ),
+                        child: AnimatedBuilder(
+                          animation: _pulseAnim,
+                          builder: (context, child) {
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Transform.scale(
+                                  scale: 0.96 + _pulseAnim.value * 0.06,
+                                  child: Container(
+                                    width: 134,
+                                    height: 134,
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: AppGradients.hero,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppPalette.cyan.withOpacity(
+                                            0.28 + 0.12 * _pulseAnim.value,
+                                          ),
+                                          blurRadius: 42,
+                                          spreadRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppPalette.bgDeep.withOpacity(
+                                          0.32,
+                                        ),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.18),
+                                        ),
+                                      ),
+                                      child: const Center(
+                                        child: Text(
+                                          'N',
+                                          style: TextStyle(
+                                            fontSize: 68,
+                                            fontWeight: FontWeight.w900,
+                                            color: Colors.white,
+                                            letterSpacing: -3,
+                                            shadows: [
+                                              Shadow(
+                                                blurRadius: 20,
+                                                color: Colors.black54,
+                                                offset: Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 22),
+                                const Text(
+                                  'NexHub Games',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppPalette.textPrimary,
+                                    letterSpacing: 0.6,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Play. Compete. Discover.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    height: 1.4,
+                                    color: AppPalette.textMuted.withOpacity(
+                                      0.95,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 22),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(999),
+                                  child: LinearProgressIndicator(
+                                    minHeight: 7,
+                                    backgroundColor: Colors.white.withOpacity(
+                                      0.08,
+                                    ),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          AppPalette.cyan,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  'Loading your arcade hub',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppPalette.textMuted.withOpacity(
+                                      0.85,
+                                    ),
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(height: 18),
+                                AnimatedOpacity(
+                                  opacity: _canSkip ? 1 : 0,
+                                  duration: const Duration(milliseconds: 250),
+                                  child: TextButton.icon(
+                                    onPressed:
+                                        _canSkip ? _completeSplash : null,
+                                    icon: const Icon(Icons.skip_next_rounded),
+                                    label: const Text('Skip intro'),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white,
+                                      backgroundColor: Colors.white.withOpacity(
+                                        0.08,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  final Color color;
+  final double size;
+
+  const _GlowOrb({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [color, color.withOpacity(0.02)]),
         ),
       ),
     );

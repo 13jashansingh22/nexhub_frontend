@@ -3,8 +3,6 @@ import 'app/app.dart';
 
 import 'features/splash_screen.dart';
 
-import 'features/splash_screen.dart' show ProjectNameSplashScreen;
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const AppWithSplash());
@@ -29,7 +27,10 @@ class _AppWithSplashState extends State<AppWithSplash> {
   @override
   Widget build(BuildContext context) {
     return _showSplash
-        ? ProjectNameSplashScreen(onFinish: _finishSplash)
+        ? MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: ProjectNameSplashScreen(onFinish: _finishSplash),
+          )
         : const NexMeetGamesApp();
   }
 }

@@ -1,81 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:ui';
 import 'dart:math';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-const _portfolioFont = 'Poppins';
-const _primaryColor = Color(0xFF1976D2); // Blue
-const _accentColor = Color(0xFFE040FB); // Pink
-const _bgGradient1 = Color(0xFF232526);
-const _bgGradient2 = Color(0xFF1976D2);
-const _bgGradient3 = Color(0xFFE040FB);
+import '../app/theme/app_palette.dart';
 
-// Short horizontal game portfolio widget
+class _GameEntry {
+  final String title;
+  final String description;
+  final String badge;
+  final IconData icon;
+  final LinearGradient gradient;
+
+  const _GameEntry({
+    required this.title,
+    required this.description,
+    required this.badge,
+    required this.icon,
+    required this.gradient,
+  });
+}
+
 class ShortGamePortfolio extends StatelessWidget {
-  final List<Map<String, String>> games;
+  final List<_GameEntry> games;
   final void Function(String title)? onGameTap;
   const ShortGamePortfolio({super.key, required this.games, this.onGameTap});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 110,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        itemCount: games.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
-        itemBuilder: (context, index) {
-          final game = games[index];
-          return GestureDetector(
-            onTap: () => onGameTap?.call(game['title'] ?? ''),
-            child: Container(
-              width: 90,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: _primaryColor.withOpacity(0.18)),
-                boxShadow: [
-                  BoxShadow(
-                    color: _accentColor.withOpacity(0.18),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: 48,
-                    child: Image.asset(
-                      game['image'] ?? '',
-                      fit: BoxFit.contain,
-                      errorBuilder:
-                          (context, error, stackTrace) => Icon(
-                            Icons.videogame_asset,
-                            size: 36,
-                            color: _accentColor,
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    game['title'] ?? '',
-                    style: const TextStyle(
-                      fontFamily: _portfolioFont,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      color: _primaryColor,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 420;
+        final tileWidth = isCompact ? 134.0 : 170.0;
+        return SizedBox(
+          height: isCompact ? 170 : 188,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 12),
+            itemCount: games.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final game = games[index];
+              return _GameTile(
+                game: game,
+                compact: true,
+                width: tileWidth,
+                onTap: () => onGameTap?.call(game.title),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -103,67 +81,98 @@ class _Particle {
 
 class _PortfolioScreenState extends State<PortfolioScreen>
     with SingleTickerProviderStateMixin {
-  final List<Map<String, String>> games = [
-    {
-      'title': 'Snake',
-      'image': 'assets/snake.png',
-      'description': 'Classic snake game.',
-    },
-    {
-      'title': 'Asteroids',
-      'image': 'assets/asteroids.png',
-      'description': 'Dodge and destroy asteroids in space!',
-    },
-    {
-      'title': 'Tic Tac Toe',
-      'image': 'assets/tic_tac_toe.png',
-      'description': 'Play Xs and Os.',
-    },
-    {
-      'title': '2048',
-      'image': 'assets/2048.png',
-      'description': 'Join the numbers and get to 2048!',
-    },
-    {
-      'title': 'Sudoku',
-      'image': 'assets/sudoku.png',
-      'description': 'Fill the grid with numbers 1-9.',
-    },
-    {
-      'title': 'Memory Match',
-      'image': 'assets/memory.png',
-      'description': 'Test your memory skills.',
-    },
-    {
-      'title': 'Chess',
-      'image': 'assets/chess.png',
-      'description': 'Classic chess game.',
-    },
-    {
-      'title': 'Minesweeper',
-      'image': 'assets/minesweeper.png',
-      'description': 'Find all the mines!',
-    },
-    {
-      'title': 'Pong',
-      'image': 'assets/pong.png',
-      'description': 'Retro paddle game.',
-    },
-    {
-      'title': 'Breakout',
-      'image': 'assets/breakout.png',
-      'description': 'Break all the bricks!',
-    },
-    {
-      'title': 'Coming Soon',
-      'image': 'assets/coming_soon.png',
-      'description': 'More games on the way!',
-    },
+  static const List<_GameEntry> _fallbackGames = [
+    _GameEntry(
+      title: 'Snake',
+      description: 'Classic arcade with a sharp neon board.',
+      badge: 'Arcade',
+      icon: Icons.sports_esports_rounded,
+      gradient: AppGradients.arcade,
+    ),
+    _GameEntry(
+      title: 'Asteroids',
+      description: 'Dodge debris and survive the field.',
+      badge: 'Action',
+      icon: Icons.rocket_launch_rounded,
+      gradient: AppGradients.action,
+    ),
+    _GameEntry(
+      title: 'Flappy Bird',
+      description: 'Tap into a brighter take on the classic flyer.',
+      badge: 'Arcade',
+      icon: Icons.flutter_dash_rounded,
+      gradient: AppGradients.casual,
+    ),
+    _GameEntry(
+      title: 'Tic Tac Toe',
+      description: 'Fast matches with a clean neon board.',
+      badge: 'Quick Play',
+      icon: Icons.grid_view_rounded,
+      gradient: AppGradients.casual,
+    ),
+    _GameEntry(
+      title: '2048',
+      description: 'Merge tiles and push the score higher.',
+      badge: 'Puzzle',
+      icon: Icons.paste_rounded,
+      gradient: AppGradients.puzzle,
+    ),
+    _GameEntry(
+      title: 'Sudoku',
+      description: 'Focus, logic, and a polished puzzle grid.',
+      badge: 'Logic',
+      icon: Icons.center_focus_strong_rounded,
+      gradient: AppGradients.unique,
+    ),
+    _GameEntry(
+      title: 'Memory Match',
+      description: 'Train your recall with crisp feedback.',
+      badge: 'Brain',
+      icon: Icons.psychology_alt_rounded,
+      gradient: AppGradients.multiplayer,
+    ),
+    _GameEntry(
+      title: 'Chess',
+      description: 'A classic strategy board with a dark polish.',
+      badge: 'Strategy',
+      icon: Icons.extension_rounded,
+      gradient: AppGradients.multiplayer,
+    ),
+    _GameEntry(
+      title: 'Minesweeper',
+      description: 'Careful reveals and a crisp victory path.',
+      badge: 'Tactical',
+      icon: Icons.radar_rounded,
+      gradient: AppGradients.puzzle,
+    ),
+    _GameEntry(
+      title: 'Pong',
+      description: 'Retro paddle action with a modern skin.',
+      badge: 'Retro',
+      icon: Icons.sports_tennis_rounded,
+      gradient: AppGradients.casual,
+    ),
+    _GameEntry(
+      title: 'Breakout',
+      description: 'Smash through bricks with reactive play.',
+      badge: 'Arcade',
+      icon: Icons.auto_awesome_rounded,
+      gradient: AppGradients.action,
+    ),
+    _GameEntry(
+      title: 'Coming Soon',
+      description: 'New experiences are already in the queue.',
+      badge: 'Next up',
+      icon: Icons.upcoming_rounded,
+      gradient: AppGradients.hero,
+    ),
   ];
 
-  int _hoveredIndex = -1;
-  double _tiltX = 0;
-  double _tiltY = 0;
+  final Dio _dio = Dio();
+  late List<_GameEntry> _games = List.of(_fallbackGames);
+  List<String> _supportedInputModes = const ['touch', 'keyboard'];
+  String? _catalogStatus;
+
   late AnimationController _bgController;
   List<_Particle> _particles = [];
 
@@ -175,6 +184,188 @@ class _PortfolioScreenState extends State<PortfolioScreen>
           ..addListener(_updateParticles)
           ..repeat();
     _initParticles();
+    _loadGameCatalog();
+  }
+
+  String get _catalogBaseUrl {
+    const configured = String.fromEnvironment(
+      'NEXHUB_API_BASE_URL',
+      defaultValue: '',
+    );
+
+    if (configured.isNotEmpty) {
+      return configured;
+    }
+
+    if (kIsWeb) {
+      return 'http://localhost:5000/api/v1';
+    }
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'http://10.0.2.2:5000/api/v1';
+      case TargetPlatform.iOS:
+      case TargetPlatform.macOS:
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+      case TargetPlatform.fuchsia:
+        return 'http://localhost:5000/api/v1';
+    }
+  }
+
+  Future<void> _loadGameCatalog() async {
+    try {
+      final response = await _dio.get('$_catalogBaseUrl/games/catalog');
+      final payload = response.data;
+
+      if (payload is Map<String, dynamic>) {
+        final data = payload['data'];
+        if (data is Map<String, dynamic>) {
+          final rawGames = data['games'];
+          final rawModes = data['inputModes'];
+
+          if (rawGames is List) {
+            final fetchedGames = rawGames
+                .whereType<Map>()
+                .map(
+                  (game) => _GameEntry(
+                    title: '${game['title'] ?? ''}',
+                    description:
+                        '${game['description'] ?? 'Tap to launch a game.'}',
+                    badge: '${game['badge'] ?? 'Play'}',
+                    icon: _iconForGame(
+                      '${game['slug'] ?? ''}',
+                      '${game['title'] ?? ''}',
+                    ),
+                    gradient: _gradientForGame(
+                      '${game['category'] ?? ''}',
+                      '${game['title'] ?? ''}',
+                    ),
+                  ),
+                )
+                .toList(growable: false);
+
+            if (mounted) {
+              setState(() {
+                if (fetchedGames.isNotEmpty) {
+                  _games = fetchedGames;
+                }
+                _supportedInputModes =
+                    rawModes is List
+                        ? rawModes.map((mode) => '$mode').toList()
+                        : const ['touch', 'keyboard'];
+                _catalogStatus = 'Live catalog connected';
+              });
+            }
+            return;
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _catalogStatus = 'Using local fallback catalog';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _catalogStatus = 'Offline fallback catalog';
+        });
+      }
+    }
+  }
+
+  IconData _iconForGame(String slug, String title) {
+    switch (slug.toLowerCase()) {
+      case 'snake':
+        return Icons.sports_esports_rounded;
+      case 'asteroids':
+        return Icons.rocket_launch_rounded;
+      case 'flappy-bird':
+      case 'flappy bird':
+        return Icons.flutter_dash_rounded;
+      case 'tic-tac-toe':
+      case 'tic tac toe':
+        return Icons.grid_view_rounded;
+      case '2048':
+        return Icons.paste_rounded;
+      case 'sudoku':
+        return Icons.center_focus_strong_rounded;
+      case 'memory-match':
+      case 'memory match':
+        return Icons.psychology_alt_rounded;
+      case 'chess':
+        return Icons.extension_rounded;
+      case 'minesweeper':
+        return Icons.radar_rounded;
+      case 'pong':
+        return Icons.sports_tennis_rounded;
+      case 'breakout':
+        return Icons.auto_awesome_rounded;
+      default:
+        switch (title.toLowerCase()) {
+          case 'snake':
+            return Icons.sports_esports_rounded;
+          case 'asteroids':
+            return Icons.rocket_launch_rounded;
+          case 'flappy bird':
+            return Icons.flutter_dash_rounded;
+          case 'tic tac toe':
+            return Icons.grid_view_rounded;
+          case '2048':
+            return Icons.paste_rounded;
+          case 'sudoku':
+            return Icons.center_focus_strong_rounded;
+          case 'memory match':
+            return Icons.psychology_alt_rounded;
+          case 'chess':
+            return Icons.extension_rounded;
+          case 'minesweeper':
+            return Icons.radar_rounded;
+          case 'pong':
+            return Icons.sports_tennis_rounded;
+          case 'breakout':
+            return Icons.auto_awesome_rounded;
+          default:
+            return Icons.videogame_asset_rounded;
+        }
+    }
+  }
+
+  LinearGradient _gradientForGame(String category, String title) {
+    switch (category.toLowerCase()) {
+      case 'arcade':
+        return AppGradients.arcade;
+      case 'puzzle':
+        return AppGradients.puzzle;
+      case 'action':
+        return AppGradients.action;
+      case 'multiplayer':
+        return AppGradients.multiplayer;
+      case 'unique':
+        return AppGradients.unique;
+      default:
+        switch (title.toLowerCase()) {
+          case 'snake':
+          case 'flappy bird':
+          case 'breakout':
+            return AppGradients.arcade;
+          case 'asteroids':
+          case 'pong':
+            return AppGradients.action;
+          case '2048':
+          case 'sudoku':
+          case 'memory match':
+            return AppGradients.puzzle;
+          case 'chess':
+            return AppGradients.multiplayer;
+          case 'coming soon':
+            return AppGradients.hero;
+          default:
+            return AppGradients.casual;
+        }
+    }
   }
 
   void _initParticles() {
@@ -219,88 +410,591 @@ class _PortfolioScreenState extends State<PortfolioScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: ShaderMask(
-          shaderCallback:
-              (bounds) => const LinearGradient(
-                colors: [_primaryColor, _accentColor, _bgGradient1],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(bounds),
-          child: const Text(
-            'NexHub Games',
-            style: TextStyle(
-              fontFamily: _portfolioFont,
-              fontWeight: FontWeight.bold,
-              fontSize: 34,
-              letterSpacing: 2.5,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  blurRadius: 24,
-                  color: _primaryColor,
-                  offset: Offset(0, 2),
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    return FocusTraversalGroup(
+      policy: OrderedTraversalPolicy(),
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          titleSpacing: 12,
+          title: ShaderMask(
+            shaderCallback:
+                (bounds) => const LinearGradient(
+                  colors: [AppPalette.cyan, AppPalette.purple, AppPalette.pink],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ).createShader(bounds),
+            child: const Text(
+              'NexHub Games',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 26,
+                letterSpacing: 1.2,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          backgroundColor: Colors.transparent,
+          centerTitle: false,
+          elevation: 0,
+        ),
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // Animated gradient background
+            AnimatedBuilder(
+              animation: _bgController,
+              builder: (context, child) {
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color.lerp(
+                          AppPalette.bgDeep,
+                          AppPalette.purple,
+                          0.5 + 0.5 * sin(_bgController.value * 2 * pi),
+                        )!,
+                        Color.lerp(
+                          AppPalette.bgMid,
+                          AppPalette.cyan,
+                          0.5 + 0.5 * cos(_bgController.value * 2 * pi),
+                        )!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Particle effect overlay
+            IgnorePointer(
+              child: CustomPaint(
+                painter: _ParticlePainter(_particles),
+                size: Size.infinite,
+              ),
+            ),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  screenWidth < 420 ? 12 : 16,
+                  12,
+                  screenWidth < 420 ? 12 : 16,
+                  28,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroPanel(context),
+                    const SizedBox(height: 22),
+                    _buildSectionHeader(
+                      title: 'Featured Arcade',
+                      subtitle:
+                          'Quick-launch picks with strong first impressions.',
+                    ),
+                    ShortGamePortfolio(
+                      games: _games.take(7).toList(),
+                      onGameTap: (title) {
+                        GoRouter.of(context).push('/game', extra: title);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(
+                      title: 'All Games',
+                      subtitle:
+                          'A responsive catalog built for quick browsing.',
+                    ),
+                    const SizedBox(height: 14),
+                    _buildGameGrid(context),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroPanel(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final compactHero = screenWidth < 520;
+    final primaryGameTitle = _games.isNotEmpty ? _games.first.title : 'Snake';
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(compactHero ? 18 : 22),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.14),
+            Colors.white.withOpacity(0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.20),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (compactHero)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.hero,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(Icons.gamepad_rounded, color: Colors.white),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Your gaming shelf, cleaned up',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppPalette.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Launch from a polished arcade hub with no missing assets or dead states.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppPalette.textMuted,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.hero,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(Icons.gamepad_rounded, color: Colors.white),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your gaming shelf, cleaned up',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(
+                          color: AppPalette.textPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Launch from a polished arcade hub with no missing assets or dead states.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppPalette.textMuted,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _StatChip(
+                label: '${_games.length} games',
+                icon: Icons.videogame_asset_rounded,
+              ),
+              _StatChip(
+                label: _supportedInputModes.join(' • '),
+                icon: Icons.touch_app_rounded,
+              ),
+              _StatChip(
+                label: _catalogStatus ?? 'Live catalog',
+                icon: Icons.cloud_done_rounded,
+              ),
+            ],
           ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          // Animated gradient background
-          AnimatedBuilder(
-            animation: _bgController,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color.lerp(
-                        _bgGradient1,
-                        _primaryColor,
-                        0.5 + 0.5 * sin(_bgController.value * 2 * pi),
-                      )!,
-                      Color.lerp(
-                        _bgGradient2,
-                        _accentColor,
-                        0.5 + 0.5 * cos(_bgController.value * 2 * pi),
-                      )!,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              );
-            },
-          ),
-          // Particle effect overlay
-          IgnorePointer(
-            child: CustomPaint(
-              painter: _ParticlePainter(_particles),
-              size: Size.infinite,
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                if (_games.isEmpty) {
+                  return;
+                }
+                GoRouter.of(context).push('/game', extra: _games.first.title);
+              },
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: Text('Start with $primaryGameTitle'),
             ),
           ),
-          // Short horizontal portfolio at the top
-          Column(
-            children: [
-              const SizedBox(height: 80),
-              ShortGamePortfolio(
-                games: games.take(6).toList(),
-                onGameTap: (title) {
-                  GoRouter.of(context).push('/game', extra: title);
-                },
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader({
+    required String title,
+    required String subtitle,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppPalette.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              color: AppPalette.textMuted,
+              fontSize: 13,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameGrid(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount =
+            constraints.maxWidth < 420
+                ? 1
+                : (constraints.maxWidth > 720 ? 3 : 2);
+        final childAspectRatio =
+            constraints.maxWidth < 420
+                ? 1.55
+                : (constraints.maxWidth > 720 ? 1.18 : 0.95);
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _games.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 14,
+            crossAxisSpacing: 14,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemBuilder: (context, index) {
+            final game = _games[index];
+            return _GameTile(
+              game: game,
+              compact: false,
+              onTap:
+                  () => GoRouter.of(context).push('/game', extra: game.title),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _GameTile extends StatefulWidget {
+  final _GameEntry game;
+  final VoidCallback onTap;
+  final bool compact;
+  final double? width;
+
+  const _GameTile({
+    required this.game,
+    required this.onTap,
+    required this.compact,
+    this.width,
+  });
+
+  @override
+  State<_GameTile> createState() => _GameTileState();
+}
+
+class _GameTileState extends State<_GameTile> {
+  bool _isFocused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(24);
+
+    return SizedBox(
+      width: widget.width,
+      height: widget.compact ? 156 : 228,
+      child: FocusableActionDetector(
+        mouseCursor: SystemMouseCursors.click,
+        shortcuts: const {
+          SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+          SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+        },
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (intent) {
+              widget.onTap();
+              return null;
+            },
+          ),
+        },
+        onShowFocusHighlight: (value) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _isFocused = value;
+          });
+        },
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: borderRadius,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              decoration: BoxDecoration(
+                gradient: widget.game.gradient,
+                borderRadius: borderRadius,
+                border: Border.all(
+                  color:
+                      _isFocused
+                          ? AppPalette.cyan.withOpacity(0.95)
+                          : Colors.white.withOpacity(0.14),
+                  width: _isFocused ? 1.8 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.game.gradient.colors.last.withOpacity(0.24),
+                    blurRadius: 22,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
-              // Expanded grid (optional, can be removed for only short portfolio)
-              // Expanded(
-              //   child: Container(),
-              // ),
-            ],
+              child: Padding(
+                padding: EdgeInsets.all(widget.compact ? 12 : 16),
+                child: widget.compact ? _buildCompact() : _buildFull(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompact() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.16),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  widget.game.badge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_outward_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ],
+        ),
+        Center(
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.16),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withOpacity(0.14)),
+            ),
+            child: Icon(widget.game.icon, color: Colors.white, size: 28),
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.game.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.1,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.game.description,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.88),
+                height: 1.2,
+                fontSize: 11.5,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFull() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.16),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                widget.game.badge,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const Spacer(),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.16),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_outward_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.16),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.14)),
+          ),
+          child: Icon(widget.game.icon, color: Colors.white, size: 34),
+        ),
+        const Spacer(),
+        Text(
+          widget.game.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          widget.game.description,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.88),
+            height: 1.3,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _StatChip({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withOpacity(0.10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: AppPalette.cyan),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppPalette.textPrimary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

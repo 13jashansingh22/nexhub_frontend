@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'snake.dart';
 import 'asteroids.dart';
+import 'flappy_bird.dart';
 import 'tic_tac_toe.dart';
 import 'coming_soon.dart';
 import 'game_2048.dart';
@@ -17,6 +18,7 @@ Widget getGameScreenByTitle(String title) {
     case 'Snake':
       return const SnakeGameScreen();
     case 'Flappy Bird':
+      return const FlappyBirdGameScreen();
     case 'Asteroids':
       return const AsteroidsGameScreen();
     case 'Tic Tac Toe':

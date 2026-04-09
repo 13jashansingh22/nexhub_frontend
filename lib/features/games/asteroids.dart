@@ -13,10 +13,8 @@ class _AsteroidsGameScreenState extends State<AsteroidsGameScreen> {
   static const int numAsteroids = 6;
   static const double shipSize = 32;
   static const double asteroidSize = 40;
-  static const double bulletSize = 8;
   static const double shipSpeed = 4;
   static const double bulletSpeed = 8;
-  static const double asteroidSpeed = 2.2;
   static const Duration tickRate = Duration(milliseconds: 16);
 
   late Timer _timer;
